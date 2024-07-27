@@ -7,14 +7,28 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import Toastify from 'toastify-js';
 import 'toastify-js/src/toastify.css';
-import { main_base_url, urlchange_base } from '../Config'
 
-export default function Login({ tenantName }) {
+import { tenant_base_url, protocal_url } from '../Config'
+export default function TenantLogin() {
     const navigate = useNavigate()
+
     const [userName, setuserName] = useState("")
     const [password, setPassword] = useState("")
     const [deviceType, setdeviceType] = useState("string")
     const [deviceAddress, setdeviceAddress] = useState("string")
+    const [emailError, setEmailError] = useState(false)
+    const [passwordError, setPasswordError] = useState(false)
+
+
+    const data = JSON.parse(localStorage.getItem('dat'));
+
+
+    // Get the full URL
+    const fullURL = window.location.href;
+    // Create a new URL object
+    const url = new URL(fullURL);
+    // Extract the hostname and split by '.'
+    const subdomain = url.hostname.split('.')[0];
 
     const showToast = (message, backgroundColor) => {
         Toastify({
@@ -27,14 +41,28 @@ export default function Login({ tenantName }) {
             stopOnFocus: true,
         }).showToast();
     };
+    const emailRegex = /^[A-Za-z0-9](([a-zA-Z0-9,=\.!\-#|\$%\^&\*\+/\?_`\{\}~]+)*)@(?:[0-9a-zA-Z-]+\.)+[a-zA-Z]{2,9}$/
     function handleusername(e) {
+        let userName = e.target.value;
+        if (!userName.match(emailRegex)) {
+            setEmailError(true)
+        }
+        else {
+            setEmailError(false)
+        }
         setuserName(e.target.value)
     }
+    const passwordRegex = /(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/
     function handlepassword(e) {
-
+        let password = e.target.value;
+        if (!password.match(passwordRegex)) {
+            setPasswordError(true)
+        }
+        else {
+            setPasswordError(false)
+        }
         setPassword(e.target.value)
     }
-
 
     async function handleSubmit(e) {
         e.preventDefault()
@@ -45,27 +73,30 @@ export default function Login({ tenantName }) {
             showToast("username is required and email form is not correct ", "#FF0000");
             return;
         }
-
+        const passwordRegex = /(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/
+        if (!password.match(passwordRegex)) {
+            showToast("Password is required and password has eight characters including one uppercase letter, one lowercase letter, and one number or special characte", "#FF0000");
+            return;
+        }
         try {
-            const response = await axios.post(`${main_base_url}/Users/checklogin`, {
+            const response = await axios.post(`${protocal_url}${subdomain}.${tenant_base_url}/Users/login`, {
                 userName: userName,
                 password: password,
                 deviceType: deviceType,
                 deviceAddress: deviceAddress
             })
+            const logindetail = response.data.data
+            localStorage.setItem("token", response.data.data.token);
+            localStorage.setItem("userDetail", JSON.stringify(logindetail))
             showToast(response.data.message, "#00ff00")
-            const host = response.data.data.host
-            setTimeout(() => {
-                const newUrl = `http://${host}/tenantlogin`;
-                window.location.href = newUrl;
-            }, 100);
+            navigate(`/`)
 
         }
         catch (error) {
-
             if (error.response.data) {
+
                 showToast(error.response.data.message, "#FF0000")
-                navigate(`/registration`)   
+
             } else {
                 showToast(error.response.data.message, "#FF0000")
 
@@ -141,10 +172,6 @@ export default function Login({ tenantName }) {
                     </div>
                 </div>
             </div>
-
-
-
-
         </>
     )
 }

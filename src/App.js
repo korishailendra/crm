@@ -1,21 +1,24 @@
-import logo from './logo.svg';
 import './App.css';
 import Login from './Login/Login';
 import Registtration from './Registration/Registtration';
-import { Route, Routes } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Verifyotp from './Registration/Verifyotp';
+import SidebarHeader from './SidebarHeader/SidebarHeader';
+import WelcomePage from './Registration/Welcome';
+import { ApiProvider } from './Context/ApiContext';
+import TenantLogin from './Login/TenantLogin';
 
 function App() {
+
   return (
     <>
-
       <Routes>
-        {/* <Login /> */}
-        <Route path='/' element={<Login />} />
-        <Route path='/registration' element={<Registtration />} />
-        <Route path='/verifyotp' element={<Verifyotp />} />
-
-
+        <Route path='/tenantlogin' element={<TenantLogin />} />
+        <Route path='/login' element={<Login />} />
+        <Route path='/registration' element={<ApiProvider><Registtration /></ApiProvider>} />
+        <Route path='/verifyotp/:userId' element={<Verifyotp />} />
+        <Route path='/welcome/:tenantId' element={<WelcomePage />} />
+        <Route path='*' element={<SidebarHeader />} />
       </Routes>
 
     </>
@@ -23,3 +26,10 @@ function App() {
 }
 
 export default App;
+
+
+
+
+
+
+
